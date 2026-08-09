@@ -1,0 +1,21 @@
+# Dataset and database files (Excluded due to GitHub >100MB file size limit)
+Traffic_Violations.csv
+data/*.parquet
+data/*.db
+data/
+
+# Python cache & virtual environments
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.venv/
+venv/
+ENV/
+env/
+
+# IDE & OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
