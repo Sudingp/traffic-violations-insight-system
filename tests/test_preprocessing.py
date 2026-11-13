@@ -99,3 +99,18 @@ def test_process_traffic_violations_df_sample():
     assert df_clean['Accident'].iloc[1] == True
     assert np.isnan(df_clean['Latitude'].iloc[0])  # (0,0) converted to NaN
     assert df_clean['Is_Multi_Charge'].iloc[1] == True  # seq-002 appears twice
+
+
+def test_missing_text_values_filled_on_pandas3():
+    """
+    Regression (INC-001): on pandas >= 3, .astype(str) leaves NaN as missing,
+    so blanks skipped the UNKNOWN / NOT APPLICABLE fills and reached the DB as NULL.
+    """
+    from tests.conftest import make_record
+    from src.schema import to_csv_columns
+    rows = to_csv_columns([make_record(model=None, race=None, location=None)])
+    df = process_traffic_violations_df(pd.DataFrame(rows))
+    assert df['Model'].iloc[0] == 'UNKNOWN'
+    assert df['Location'].iloc[0] == 'UNKNOWN'
+    assert df['Race'].iloc[0] == 'OTHER'
+    assert df['Search_Outcome'].iloc[0] == 'NOT APPLICABLE'

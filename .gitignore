@@ -19,3 +19,12 @@ env/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Live ingestion runtime output
+logs/
+
+# Spark / Airflow local runs
+spark-warehouse/
+metastore_db/
+derby.log
+.env

@@ -1,0 +1,218 @@
+{
+  "split": {
+    "train": "<= 2022",
+    "valid": 2023,
+    "test": ">= 2024",
+    "rows": {
+      "train": 1740977,
+      "valid": 66876,
+      "test": 167260
+    },
+    "test_citation_rate": 0.30696520387420784
+  },
+  "excluded_features": [
+    "Race",
+    "Gender",
+    "Search_Conducted",
+    "Search_Disposition",
+    "Search_Outcome",
+    "Search_Reason",
+    "Search_Reason_For_Stop",
+    "Search_Type",
+    "Search_Arrest_Reason"
+  ],
+  "models": [
+    {
+      "name": "Baseline (training citation rate)",
+      "roc_auc": 0.5,
+      "pr_auc": 0.30696520387420784,
+      "f1": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "brier": 0.2378259227242281,
+      "threshold": 0.5,
+      "confusion": [
+        [
+          115917,
+          0
+        ],
+        [
+          51343,
+          0
+        ]
+      ]
+    },
+    {
+      "name": "Logistic regression (C=0.1, class_weight=None)",
+      "roc_auc": 0.7902785017425976,
+      "pr_auc": 0.698491989659704,
+      "f1": 0.6051040565077718,
+      "precision": 0.6202777607330593,
+      "recall": 0.5906550065247453,
+      "brier": 0.1707267749562494,
+      "threshold": 0.49999999999999994,
+      "confusion": [
+        [
+          97352,
+          18565
+        ],
+        [
+          21017,
+          30326
+        ]
+      ]
+    },
+    {
+      "name": "Logistic regression, recalibrated on 2023",
+      "roc_auc": 0.7902785017425976,
+      "pr_auc": 0.698491989659704,
+      "f1": 0.6044504143250797,
+      "precision": 0.6131527271269988,
+      "recall": 0.595991663907446,
+      "brier": 0.15350116811074896,
+      "threshold": 0.3499999999999999,
+      "confusion": [
+        [
+          96611,
+          19306
+        ],
+        [
+          20743,
+          30600
+        ]
+      ]
+    },
+    {
+      "name": "Gradient-boosted trees",
+      "roc_auc": 0.7969394912876344,
+      "pr_auc": 0.7087967715136737,
+      "f1": 0.6099102683110109,
+      "precision": 0.558424528912776,
+      "recall": 0.6718540015191944,
+      "brier": 0.16418600124178392,
+      "threshold": 0.42999999999999994,
+      "confusion": [
+        [
+          88640,
+          27277
+        ],
+        [
+          16848,
+          34495
+        ]
+      ]
+    }
+  ],
+  "meta": {
+    "logreg": {
+      "C": 0.1,
+      "class_weight": null,
+      "threshold_from_valid": 0.49999999999999994
+    }
+  },
+  "test_by_year": [
+    {
+      "year": 2024,
+      "rows": 77581,
+      "citation_rate": 0.33438599657132545,
+      "mean_predicted": 0.44624330669153517,
+      "mean_predicted_recalibrated": 0.3412485967738257,
+      "roc_auc": 0.7897327105418989,
+      "f1": 0.617826473201066
+    },
+    {
+      "year": 2025,
+      "rows": 89679,
+      "citation_rate": 0.28324356872846485,
+      "mean_predicted": 0.4209070147952246,
+      "mean_predicted_recalibrated": 0.31557022530817824,
+      "roc_auc": 0.7894678394306284,
+      "f1": 0.5921055285503943
+    }
+  ],
+  "top_citation_weights": [
+    [
+      "cat__Charge_16-113(K)",
+      3.6913571943585017
+    ],
+    [
+      "cat__Charge_16-303(H)",
+      3.4132374511965744
+    ],
+    [
+      "cat__Violation_Category_DUI / Alcohol / Substance",
+      3.3783519446922727
+    ],
+    [
+      "cat__Charge_16-303(D)",
+      3.3113646352632613
+    ],
+    [
+      "cat__Charge_16-303(C)",
+      2.9842244889588345
+    ],
+    [
+      "cat__Charge_16-303(G)",
+      2.9607495933886123
+    ],
+    [
+      "cat__Charge_20-103(B)",
+      2.7567988142419084
+    ],
+    [
+      "cat__Charge_16-303(F)",
+      2.6424167909086047
+    ],
+    [
+      "cat__Charge_16-112(E)",
+      2.5520301192927093
+    ],
+    [
+      "cat__Charge_16-101(A)",
+      2.4135554417427314
+    ]
+  ],
+  "top_warning_weights": [
+    [
+      "cat__Charge_21-802.1",
+      -2.704341344495918
+    ],
+    [
+      "cat__Charge_11-393.95(F)",
+      -2.605007234974935
+    ],
+    [
+      "cat__Charge_22-204(F)",
+      -2.3857650386985307
+    ],
+    [
+      "cat__Charge_11-393.78",
+      -2.1735590633618425
+    ],
+    [
+      "cat__Charge_17-104.2(B1)",
+      -2.1724741046559486
+    ],
+    [
+      "cat__Charge_21-1120(C)",
+      -2.161988675966961
+    ],
+    [
+      "cat__Charge_11-390.21",
+      -2.0600232178287383
+    ],
+    [
+      "cat__Charge_13-410(E2)",
+      -1.9731546900257488
+    ],
+    [
+      "cat__Charge_16-114(B)",
+      -1.8966557708325313
+    ],
+    [
+      "cat__Charge_11-393.9",
+      -1.8500513859230336
+    ]
+  ],
+  "seconds": 231.3
+}

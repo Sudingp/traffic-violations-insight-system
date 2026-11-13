@@ -5,6 +5,7 @@ Optimized for processing large-scale datasets (~2M+ rows).
 
 import os
 import re
+from datetime import date
 import numpy as np
 import pandas as pd
 
@@ -63,6 +64,18 @@ COLOR_MAPPING = {
     'MAROON': 'MAROON', 'BRONZE': 'BRONZE', 'COPPER': 'COPPER',
     'BEIGE': 'BEIGE'
 }
+
+
+def _to_text(series: pd.Series) -> pd.Series:
+    """
+    Convert a column to strings with missing values as ''.
+
+    pandas >= 3.0 keeps NaN/None as missing after .astype(str) instead of
+    turning them into the text 'nan'/'None'. The cleaning rules below test
+    for '' / 'NAN' / 'NONE', so without this helper missing values silently
+    skipped every 'UNKNOWN' / 'NOT APPLICABLE' fill on pandas 3.
+    """
+    return series.astype(object).where(series.notna(), '').astype(str)
 
 
 def clean_boolean_value(val) -> bool:
@@ -175,7 +188,7 @@ def process_traffic_violations_df(df: pd.DataFrame) -> pd.DataFrame:
     df = df.rename(columns=col_mapping)
 
     # 2. SeqID - String type, clean whitespace
-    df['SeqID'] = df['SeqID'].astype(str).str.strip()
+    df['SeqID'] = _to_text(df['SeqID']).str.strip()
 
     # 3. Deduplicate exact duplicate rows
     initial_rows = len(df)
@@ -193,8 +206,11 @@ def process_traffic_violations_df(df: pd.DataFrame) -> pd.DataFrame:
     print("Processing Dates & Times...")
     df['Date_Of_Stop'] = pd.to_datetime(df['Date_Of_Stop'], errors='coerce')
     
-    # Filter out absurd years (< 1990 or > current year 2026)
-    valid_date_mask = df['Date_Of_Stop'].dt.year.between(1990, 2026)
+    # Filter out absurd years (< 1990 or in the future).
+    # Uses today's year instead of a hard-coded 2026, which would have started
+    # nulling every live-feed record on 1 Jan 2027.
+    current_year = date.today().year
+    valid_date_mask = df['Date_Of_Stop'].dt.year.between(1990, current_year)
     df.loc[~valid_date_mask, 'Date_Of_Stop'] = pd.NaT
 
     df['Time_Of_Stop'] = df['Time_Of_Stop'].apply(clean_time_string)
@@ -221,7 +237,7 @@ def process_traffic_violations_df(df: pd.DataFrame) -> pd.DataFrame:
     text_cols_upper = ['Agency', 'SubAgency', 'Description', 'Location', 'State', 'Driver_City', 'Driver_State', 'DL_State', 'Arrest_Type', 'Charge', 'Article']
     for col in text_cols_upper:
         if col in df.columns:
-            df[col] = df[col].astype(str).str.strip().str.upper()
+            df[col] = _to_text(df[col]).str.strip().str.upper()
             df.loc[df[col].isin(['NAN', 'NONE', 'NULL', '']), col] = 'UNKNOWN'
 
     # Extract SubAgency District Number if available
@@ -269,44 +285,46 @@ def process_traffic_violations_df(df: pd.DataFrame) -> pd.DataFrame:
     ]
     for col in search_cols:
         if col in df.columns:
-            df[col] = df[col].astype(str).str.strip().str.upper()
+            df[col] = _to_text(df[col]).str.strip().str.upper()
             df.loc[df[col].isin(['NAN', 'NONE', 'NULL', '']), col] = 'NOT APPLICABLE'
 
     # 10. Vehicle Year & Make & Model & Color
     print("Cleaning Vehicle Attributes...")
     df['Year'] = pd.to_numeric(df['Year'], errors='coerce')
-    valid_year_mask = df['Year'].between(1960, 2026)
+    # Model years run ahead of the calendar (2027 models are sold in 2026),
+    # so allow current_year + 1.
+    valid_year_mask = df['Year'].between(1960, current_year + 1)
     df.loc[~valid_year_mask, 'Year'] = np.nan
 
     # Vehicle Make Normalization
-    df['Make_Raw'] = df['Make'].astype(str).str.strip().str.upper()
+    df['Make_Raw'] = _to_text(df['Make']).str.strip().str.upper()
     df['Make'] = df['Make_Raw'].map(MAKE_MAPPING).fillna(df['Make_Raw'])
     df.loc[df['Make'].isin(['NAN', 'NONE', 'NULL', '', 'UNKNOWN']), 'Make'] = 'UNKNOWN'
 
     # Vehicle Color Normalization
-    df['Color_Raw'] = df['Color'].astype(str).str.strip().str.upper()
+    df['Color_Raw'] = _to_text(df['Color']).str.strip().str.upper()
     df['Color'] = df['Color_Raw'].map(COLOR_MAPPING).fillna(df['Color_Raw'])
     df.loc[df['Color'].isin(['NAN', 'NONE', 'NULL', '']), 'Color'] = 'UNKNOWN'
 
     # Vehicle Model
-    df['Model'] = df['Model'].astype(str).str.strip().str.upper()
+    df['Model'] = _to_text(df['Model']).str.strip().str.upper()
     df.loc[df['Model'].isin(['NAN', 'NONE', 'NULL', '']), 'Model'] = 'UNKNOWN'
 
     # Vehicle Type
-    df['VehicleType'] = df['VehicleType'].astype(str).str.strip()
+    df['VehicleType'] = _to_text(df['VehicleType']).str.strip()
     df.loc[df['VehicleType'].isin(['nan', 'None', '']), 'VehicleType'] = 'Unknown'
 
     # 11. Demographic Columns (Race & Gender)
     print("Cleaning Demographics...")
-    df['Race'] = df['Race'].astype(str).str.strip().str.upper()
+    df['Race'] = _to_text(df['Race']).str.strip().str.upper()
     df.loc[df['Race'].isin(['NAN', 'NONE', 'NULL', '']), 'Race'] = 'OTHER'
 
-    df['Gender'] = df['Gender'].astype(str).str.strip().str.upper()
+    df['Gender'] = _to_text(df['Gender']).str.strip().str.upper()
     gender_map = {'M': 'M', 'MALE': 'M', 'F': 'F', 'FEMALE': 'F'}
     df['Gender'] = df['Gender'].map(gender_map).fillna('Unknown')
 
     # 12. Violation Type
-    df['Violation_Type'] = df['Violation_Type'].astype(str).str.strip().str.title()
+    df['Violation_Type'] = _to_text(df['Violation_Type']).str.strip().str.title()
     df.loc[df['Violation_Type'].isin(['Nan', 'None', '']), 'Violation_Type'] = 'Citation'
 
     # 13. Feature Engineering: Accident Severity Index
